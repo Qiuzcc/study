@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>图片懒加载</title>
+    <style>
+        body {
+            margin: 0;
+            padding: 24px 10%;
+        }
+
+        li {
+            margin: 8px 0;
+        }
+
+        img {
+            width: 400px;
+            height: 300px;
+            margin: 48px;
+            object-fit: cover;
+        }
+    </style>
+</head>
+
+<body>
+    <h2>图片懒加载，方法一：事件监听(window.onscroll) + 节流</h2>
+    <h3>具体做法：</h3>
+    <h4>
+        <ol>
+            <li>所有img标签设置一个固定的宽高，src属性设置一个体积很小的缩略图链接（也可以不设置）</li>
+            <li>真正的图片链接放在data-src</li>
+            <li>监听页面滚动事件，绑定一个（节流后的）回调函数</li>
+            <li>获取页面所有img标签组成img数组</li>
+            <li>在回调函数中，遍历img数组，判断当前img标签是否 出现/即将出现 在视口中</li>
+            <li>如果是的话，将该标签的src用data-src值替换，并将该img标签从img数组中删除</li>
+        </ol>
+    </h4>
+
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/IMG_3995.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230111_073418.jpg" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230111_073414.jpg" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230110_180904.jpg" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230110_120150.jpg" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230110_071623_1.jpg"
+        alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_4025.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_4022.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_4018.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_4017.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/IMG_3995.JPG" alt="">
+    <img src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/images/empty_box-Large.jpg"
+        data-src="https://qiuzcc-typora-images.oss-cn-shenzhen.aliyuncs.com/image_test/IMG_20230111_073418.jpg" alt="">
+
+    <script>
+        // 节流函数
+        function throttle(fn, interval) {
+            let timeoutId = null
+            return function (...args) {
+                let context = this
+                if (!timeoutId) {
+                    timeoutId = setInterval(() => {
+                        clearInterval(timeoutId)
+                        timeoutId = null
+                        fn.apply(context, args)
+                    }, interval)
+                }
+            }
+        }
+
+        let imgs = document.getElementsByTagName('img')
+        let curLoadImgIndex = 0
+        function imgLazyLoad() {
+            for (let i = curLoadImgIndex; i < imgs.length; i++) {
+                let img = imgs[i]
+                if (img.getBoundingClientRect().top <= window.innerHeight) {
+                    img.src = img.dataset.src
+                    img.dataset.src = null
+                    curLoadImgIndex = i + 1
+                }
+            }
+        }
+
+        // 监听滚动事件 + 节流（页面滚动过程中，每0.25秒执行一次回调函数）
+        window.onscroll = throttle(imgLazyLoad, 250)
+
+        // 立即执行，保证首屏的图片能够正确被加载
+        imgLazyLoad()
+    </script>
+</body>
+
+</html>
